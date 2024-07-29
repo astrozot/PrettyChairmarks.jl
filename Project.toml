@@ -1,0 +1,7 @@
+name = "PrettyChairmarks"
+uuid = "aafa11c5-44f9-44a1-b829-427e6ce1ffc2"
+authors = ["Marco Lombardi <marco.lombardi@gmail.com>"]
+version = "1.0.0"
+
+[compat]
+julia = "1.6.7"
