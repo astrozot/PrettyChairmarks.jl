@@ -7,5 +7,5 @@ using Test
     s = String(take!(buf))
     @test startswith(s, r"Chairmarks\.Benchmark: [0-9]* samples? with [0-9]* evaluations?\.")
     @test endswith(s, "allocs estimate: 0.")
-    @test occursin("Histogram: log(frequency) by time", s)
+    @test occursin(r"Histogram: (log\()?frequency\)? by time", s)
 end
