@@ -4,7 +4,7 @@ using Chairmarks
 using Printf
 import Statistics
 
-export @b, @be, @bs
+export @b, @be, @bs, @bcomp
 
 prettypercent(p) = string(@sprintf("%.2f", p * 100), "%")
 
@@ -88,6 +88,13 @@ end
 macro bs(args...)
     call = Chairmarks.process_args(args)
     :(PrettyBenchmark($call))
+end
+
+macro bcomp(expr...)
+    call = Chairmarks.process_args(expr)
+    quote
+        tuple([PrettyChairmarks.PrettyBenchmark(bnc) for bnc in $call]...)
+    end
 end
 
 _summary(io, t, args...) = withtypename(() -> print(io, args...), io, t)
@@ -302,5 +309,7 @@ function Base.show(io::IO, ::MIME"text/plain", t1::PrettyBenchmark)
     printstyled(io, allocsstr; color=:yellow)
     return print(io, ".")
 end
+
+Base.show(io::IO, m::MIME"text/plain", bmks::Tuple{Vararg{PrettyBenchmark}}) = for b in bmks Base.show(io, m, b) end
 
 end
