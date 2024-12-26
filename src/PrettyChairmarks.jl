@@ -99,7 +99,7 @@ end
 
 _summary(io, t, args...) = withtypename(() -> print(io, args...), io, t)
 
-Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(time(t)))
+Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(minimum(t -> t.time, bb.b.samples)))
 
 _show(io, t) =
     if get(io, :compact, true)
