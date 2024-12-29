@@ -85,16 +85,12 @@ struct PrettyBenchmark
     b::Chairmarks.Benchmark
 end
 
+postprocess(b::Chairmarks.Benchmark) = PrettyBenchmark(b)
+postprocess(bmarks::Tuple{Vararg{Chairmarks.Benchmark}}) = PrettyBenchmark.(bmarks)
+
 macro bs(args...)
     call = Chairmarks.process_args(args)
-    :(PrettyBenchmark($call))
-end
-
-macro bcomp(expr...)
-    call = Chairmarks.process_args(expr)
-    quote
-        tuple([PrettyChairmarks.PrettyBenchmark(bnc) for bnc in $call]...)
-    end
+    :(postprocess($call))
 end
 
 _summary(io, t, args...) = withtypename(() -> print(io, args...), io, t)
