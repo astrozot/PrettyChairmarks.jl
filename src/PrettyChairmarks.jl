@@ -95,7 +95,7 @@ end
 
 _summary(io, t, args...) = withtypename(() -> print(io, args...), io, t)
 
-Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(minimum(t -> t.time, bb.b.samples)))
+Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(minimum(t -> t.time, t.b.samples)))
 
 _show(io, t) =
     if get(io, :compact, true)
@@ -316,7 +316,7 @@ function Base.show(io::IO, m::MIME"text/plain", bmks::Tuple{Vararg{PrettyBenchma
     _hmax = maximum(t -> maximum(s -> s.time, t.b.samples), bmks)
 
     for b in bmks 
-        Base.show(io, m, b; histmin = _hmin, histmax = _hmax)
+        Base.show(io, m, b; histmax = _hmax, histmin = _hmin)
         print(io, "\n")
     end
 end
