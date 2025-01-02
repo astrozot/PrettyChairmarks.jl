@@ -85,21 +85,17 @@ struct PrettyBenchmark
     b::Chairmarks.Benchmark
 end
 
+postprocess(b::Chairmarks.Benchmark) = PrettyBenchmark(b)
+postprocess(bmarks::Tuple{Vararg{Chairmarks.Benchmark}}) = PrettyBenchmark.(bmarks)
+
 macro bs(args...)
     call = Chairmarks.process_args(args)
-    :(PrettyBenchmark($call))
-end
-
-macro bcomp(expr...)
-    call = Chairmarks.process_args(expr)
-    quote
-        tuple([PrettyChairmarks.PrettyBenchmark(bnc) for bnc in $call]...)
-    end
+    :(postprocess($call))
 end
 
 _summary(io, t, args...) = withtypename(() -> print(io, args...), io, t)
 
-Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(minimum(t -> t.time, bb.b.samples)))
+Base.summary(io::IO, t::PrettyBenchmark) = _summary(io, t, prettytime(minimum(t -> t.time, t.b.samples)))
 
 _show(io, t) =
     if get(io, :compact, true)
@@ -110,7 +106,7 @@ _show(io, t) =
 
 Base.show(io::IO, t::PrettyBenchmark) = _show(io, t)
 
-function Base.show(io::IO, ::MIME"text/plain", t1::PrettyBenchmark)
+function Base.show(io::IO, ::MIME"text/plain", t1::PrettyBenchmark; histmax::Union{T,Nothing} = nothing, histmin::Union{T,Nothing} = nothing) where {T<:AbstractFloat}
     t = t1.b
     pad = get(io, :pad, "")
     print(
@@ -229,8 +225,12 @@ function Base.show(io::IO, ::MIME"text/plain", t1::PrettyBenchmark)
     histwidth = 42 + lmaxtimewidth + rmaxtimewidth
 
     histtimes = times[1:round(Int, histquantile * end)]
-    histmin = get(io, :histmin, first(histtimes))
-    histmax = get(io, :histmax, last(histtimes))
+    if histmin === nothing 
+        histmin = get(io, :histmin, first(histtimes))
+    end
+    if histmax === nothing
+        histmax = get(io, :histmax, last(histtimes))
+    end
     logbins = get(io, :logbins, nothing)
     bins = bindata(histtimes, histwidth - 1, histmin, histmax)
     append!(bins, [1, floor((1 - histquantile) * length(times))])
@@ -310,6 +310,16 @@ function Base.show(io::IO, ::MIME"text/plain", t1::PrettyBenchmark)
     return print(io, ".")
 end
 
-Base.show(io::IO, m::MIME"text/plain", bmks::Tuple{Vararg{PrettyBenchmark}}) = for b in bmks Base.show(io, m, b) end
+function Base.show(io::IO, m::MIME"text/plain", bmks::Tuple{Vararg{PrettyBenchmark}})
+    # set the min and max for the hist
+    histquantile = 0.99
+    _hmin = minimum(t -> minimum(s -> s.time, t.b.samples), bmks)
+    _hmax = maximum(t -> maximum(sort([s.time for s in t.b.samples])[1:round(Int, histquantile * end)]), bmks)
+
+    for b in bmks 
+        show(io, m, b; histmax = _hmax, histmin = _hmin)
+        print(io, "\n")
+    end
+end
 
 end
