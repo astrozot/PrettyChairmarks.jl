@@ -312,8 +312,9 @@ end
 
 function Base.show(io::IO, m::MIME"text/plain", bmks::Tuple{Vararg{PrettyBenchmark}})
     # set the min and max for the hist
+    histquantile = 0.99
     _hmin = minimum(t -> minimum(s -> s.time, t.b.samples), bmks)
-    _hmax = maximum(t -> maximum(s -> s.time, t.b.samples), bmks)
+    _hmax = maximum(t -> maximum(sort([s.time for s in t.b.samples])[1:round(Int, histquantile * end)]), bmks)
 
     for b in bmks 
         show(io, m, b; histmax = _hmax, histmin = _hmin)
